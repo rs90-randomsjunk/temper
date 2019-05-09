@@ -48,7 +48,7 @@ config_struct config =
   300,               // u32 clock_speed; hurr mr pc is faster
   0,                 // u32 gp2x_ram_timings;
   100,               // u32 gp2x_gamma_percent;
-  1,                 // u32 six_button_pad;
+  0,                 // u32 six_button_pad;
   CD_SYSTEM_TYPE_V3, // cd_system_type_enum cd_system_type;
   1,                 // u32 bz2_savestates;
   0,                 // u32 per_game_bram;
