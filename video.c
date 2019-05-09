@@ -2216,13 +2216,13 @@ void render_line(void)
     }
     else
     {
-      if(vce.screen_width < vce.pixels_drawn[scanline_line])
+      /*if(vce.screen_width < vce.pixels_drawn[scanline_line])
       {
-        clear_line_edges(scanline_line, 0, vce.screen_center_offset,
+       clear_line_edges(scanline_line, 0, vce.screen_center_offset,
          vce.screen_width);
-      }
+      }*/
       vce.pixels_drawn[scanline_line] = vce.screen_width;
-      dest += vce.screen_center_offset;
+      //dest += vce.screen_center_offset;
 
       render_line_expand_no_scale(dest, bg_buffer, obj_buffer,
        bg_mask_buffer, obj_low_mask_buffer + 1, obj_high_mask_buffer + 1);
@@ -2303,13 +2303,13 @@ void render_line_sgx(void)
     }
     else
     {
-      if(vce.screen_width < vce.pixels_drawn[scanline_line])
+      /*if(vce.screen_width < vce.pixels_drawn[scanline_line])
       {
         clear_line_edges(scanline_line, 0,
          vce.screen_center_offset, vce.screen_width);
-      }
+      }*/
       vce.pixels_drawn[scanline_line] = vce.screen_width;
-      dest += vce.screen_center_offset;
+      //dest += vce.screen_center_offset;
 
       render_line_expand_sgx_no_scale(dest, bg_buffer_a, obj_buffer_a,
        bg_mask_buffer_a, obj_low_mask_buffer_a + 1,

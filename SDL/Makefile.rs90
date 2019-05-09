@@ -2,9 +2,9 @@
 # Gilead Kutnick - Exophase
 
 # Global definitions
-AS        = /opt/rs97-toolchain/bin/mipsel-linux-as
-CC        = /opt/rs97-toolchain/bin/mipsel-linux-gcc
-STRIP     = /opt/rs97-toolchain/bin/mipsel-linux-strip --strip-all --remove-section=.comment  --remove-section=.note
+AS        = /opt/rs90-toolchain/bin/mipsel-linux-as
+CC        = /opt/rs90-toolchain/bin/mipsel-linux-gcc
+STRIP     = /opt/rs90-toolchain/bin/mipsel-linux-strip --strip-all --remove-section=.comment  --remove-section=.note
 
 OBJS      = main.o cpu.o memory.o irq.o io.o video.o timer.o psg.o disasm.o    \
             screen.o event.o audio.o menu.o debug.o cd.o adpcm.o netplay.o     \
@@ -18,10 +18,14 @@ BIN       ?= temper
 # Platform specific definitions
 
 VPATH      += .. ../SDL ../linux ../tremor
-CFLAGS     += -DRS97_BUILD -Ofast -mips32 -fdata-sections -ffunction-sections -mno-check-zero-division -mno-abicalls -fno-PIC
+CFLAGS     += -DRS90_BUILD -Ofast -mips32 -fdata-sections -ffunction-sections -mno-check-zero-division -mno-abicalls -fno-PIC -flto
+CFLAGS	   += -mno-fp-exceptions -mno-check-zero-division -mframe-header-opt -fsingle-precision-constant
+CFLAGS	   += -fno-stack-protector -fomit-frame-pointer -falign-functions=1 -falign-jumps=1 -falign-loops=1
+#CFLAGS	   += -fprofile-generate=/home/retrofw/profile
 CFLAGS	   += -fprofile-use
 INCLUDES   = 
-LIBS       = -lSDL -lgcov -lz -lm -pthread -Wl,--as-needed -Wl,--gc-sections -flto -s
+LIBS       = -lc -lgcc -lSDL -lasound -lz -lm -no-pie -Wl,--as-needed -Wl,--gc-sections -flto -s
+#LIBS		+= -lgcov
 
 # Compilation:
 

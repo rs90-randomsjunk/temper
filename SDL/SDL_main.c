@@ -32,15 +32,15 @@ config_struct config =
   {
     CONFIG_BUTTON_UP, CONFIG_BUTTON_DOWN, CONFIG_BUTTON_LEFT,
     CONFIG_BUTTON_RIGHT, CONFIG_BUTTON_I, CONFIG_BUTTON_II,
-    CONFIG_BUTTON_III, CONFIG_BUTTON_IV, CONFIG_BUTTON_V,
-    CONFIG_BUTTON_VI, CONFIG_BUTTON_RUN, CONFIG_BUTTON_SELECT,
+    CONFIG_BUTTON_III, CONFIG_BUTTON_IV, CONFIG_BUTTON_RUN,
+    CONFIG_BUTTON_SELECT, CONFIG_BUTTON_NONE, CONFIG_BUTTON_NONE,
     CONFIG_BUTTON_NONE, CONFIG_BUTTON_NONE, CONFIG_BUTTON_NONE,
     CONFIG_BUTTON_NONE
   },
   0,                 // u32 show_fps;
   1,                 // u32 enable_sound;
   0,                 // u32 fast_forward;
-  44100,             // u32 audio_output_frequency;
+  22050,             // u32 audio_output_frequency;
   1,                 // u32 patch_idle_loops;
   SS_SNAPSHOT_OFF,   // u32 snapshot_format;
   0,                 // u32 force_usa;
@@ -48,12 +48,12 @@ config_struct config =
   300,               // u32 clock_speed; hurr mr pc is faster
   0,                 // u32 gp2x_ram_timings;
   100,               // u32 gp2x_gamma_percent;
-  0,                 // u32 six_button_pad;
+  1,                 // u32 six_button_pad;
   CD_SYSTEM_TYPE_V3, // cd_system_type_enum cd_system_type;
   1,                 // u32 bz2_savestates;
   0,                 // u32 per_game_bram;
   0,                 // u32 sound_double;
-  SCALE_1x,          // u32 scale_factor;
+  SCALE_FULLSCREEN,          // u32 scale_factor;
   0,                 // u32 fast_cd_access;
   0,                 // u32 fast_cd_load;
   0,                 // u32 scale_width;

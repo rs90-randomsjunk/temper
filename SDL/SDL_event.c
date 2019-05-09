@@ -9,8 +9,8 @@ u32 sdl_to_config_map[] =
 	SDLK_RIGHT,
 	SDLK_LCTRL,
 	SDLK_LALT,
-	SDLK_LSHIFT,
-	SDLK_SPACE,
+	//SDLK_LSHIFT,
+	//SDLK_SPACE,
 	SDLK_TAB,
 	SDLK_BACKSPACE,
 	SDLK_RETURN,
@@ -21,9 +21,9 @@ u32 key_map(u32 keys)
 {
 	unsigned char i, chosen_key;
 	
-	chosen_key = 12;
+	chosen_key = sizeof(sdl_to_config_map);
 
-	for (i=0;i<13;i++)
+	for (i=0;i<sizeof(sdl_to_config_map);i++)
 	{
 		if (keys == sdl_to_config_map[i])
 		{
@@ -114,6 +114,9 @@ u32 joy_hat_map(u32 hat_value)
   }
 }
 
+static uint32_t start_button = 0;
+static uint32_t select_button = 0;
+
 u32 update_input(event_input_struct *event_input)
 {
   SDL_Event event;
@@ -123,6 +126,8 @@ u32 update_input(event_input_struct *event_input)
   event_input->key_letter = 0;
   event_input->hat_status = HAT_STATUS_NONE;
   
+
+  
   if(SDL_PollEvent(&event))
   {
     switch(event.type)
@@ -130,73 +135,19 @@ u32 update_input(event_input_struct *event_input)
       case SDL_QUIT:
         event_input->action_type = INPUT_ACTION_TYPE_PRESS;
         event_input->key_action = KEY_ACTION_QUIT;
-        // Deliberate fallthrough
-
+       break;
       case SDL_KEYDOWN:
         event_input->action_type = INPUT_ACTION_TYPE_PRESS;
+		event_input->config_button_action = key_map(event.key.keysym.sym);
         event_input->key_letter = event.key.keysym.unicode;
-
         switch(event.key.keysym.sym)
         {
           case SDLK_ESCAPE:
-			event_input->config_button_action = CONFIG_BUTTON_MENU;
-            //event_input->key_action = KEY_ACTION_QUIT;
+			select_button = 1;
             break;
-
-          case SDLK_1:
-            event_input->key_action = KEY_ACTION_BG_OFF;
-            break;
-
-          case SDLK_2:
-            event_input->key_action = KEY_ACTION_SPR_OFF;
-            break;
-
-          case SDLK_F1:
-            event_input->key_action = KEY_ACTION_DEBUG_BREAK;
-            break;
-
-          case SDLK_t:
-            event_input->key_action = KEY_ACTION_NETPLAY_TALK;
-            break;
-
-          case SDLK_BACKQUOTE:
-            event_input->config_button_action = CONFIG_BUTTON_FAST_FORWARD;
-            break;
-
-          case SDLK_F5:
-            event_input->config_button_action = CONFIG_BUTTON_SAVE_STATE;
-            break;
-
-          case SDLK_F7:
-            event_input->config_button_action = CONFIG_BUTTON_LOAD_STATE;
-            break;
-
-          case SDLK_m:
-            event_input->config_button_action = CONFIG_BUTTON_MENU;
-            break;
-
-          case SDLK_BACKSPACE:
-            event_input->key_action = KEY_ACTION_NETPLAY_TALK_CURSOR_BACKSPACE;
-            event_input->config_button_action = key_map(event.key.keysym.sym);
-            break;
-
+            
           case SDLK_RETURN:
-            event_input->key_action = KEY_ACTION_NETPLAY_TALK_CURSOR_ENTER;
-            event_input->config_button_action = key_map(event.key.keysym.sym);
-            break;
-
-          case SDLK_LEFT:
-            event_input->key_action = KEY_ACTION_NETPLAY_TALK_CURSOR_LEFT;
-            event_input->config_button_action = key_map(event.key.keysym.sym);
-            break;
-
-          case SDLK_RIGHT:
-            event_input->key_action = KEY_ACTION_NETPLAY_TALK_CURSOR_RIGHT;
-            event_input->config_button_action = key_map(event.key.keysym.sym);
-            break; 
-     
-          default:
-            event_input->config_button_action = key_map(event.key.keysym.sym);
+			start_button = 1;
             break;
         }
         break;
@@ -204,6 +155,16 @@ u32 update_input(event_input_struct *event_input)
       case SDL_KEYUP:
         event_input->action_type = INPUT_ACTION_TYPE_RELEASE;
         event_input->config_button_action = key_map(event.key.keysym.sym);
+        switch(event.key.keysym.sym)
+        {
+          case SDLK_ESCAPE:
+			select_button = 0;
+            break;
+            
+          case SDLK_RETURN:
+			start_button = 0;
+            break;
+		}
         break;
 
       case SDL_JOYBUTTONDOWN:
@@ -224,6 +185,13 @@ u32 update_input(event_input_struct *event_input)
   else
   {
     return 0;
+  }
+  
+  if (start_button && select_button)
+  {
+	event_input->config_button_action = CONFIG_BUTTON_MENU;  
+	select_button = 0;
+	start_button = 0;
   }
 
   return 1;
@@ -436,8 +404,7 @@ void initialize_event()
 {
 	u32 i;
 	u32 joystick_count = SDL_NumJoysticks();
-	printf("%d joysticks\n", joystick_count);
-	
+
 	if(joystick_count > 0)
 	{
 		for(i=0;i<joystick_count;i++)

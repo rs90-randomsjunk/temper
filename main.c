@@ -1045,7 +1045,7 @@ s32 load_config_file(char *file_name)
   }
 
   // Others not allowed on the menu for now.
-  config.audio_output_frequency = 44100;
+  config.audio_output_frequency = 22050;
   file_read_close(config_file);
 
 #ifdef CONFIG_OPTIONS_RAM_TIMINGS

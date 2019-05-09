@@ -17,11 +17,13 @@ void gui_wait_for_input(gui_input_struct *gui_input)
   } while(gui_input->action_type == CURSOR_NONE);
 }
 
-#define FILE_LIST_ROWS ((int)((240 - 40) / 10))
+#define HEIGHT_TRUE 160
+
+#define FILE_LIST_ROWS ((int)((HEIGHT_TRUE - 40) / 10))
 #define FILE_LIST_CHARS 36
 #define DIR_LIST_CHARS 16
 #define FILE_LIST_POSITION 6
-#define DIR_LIST_POSITION (FILE_LIST_POSITION + (FILE_LIST_CHARS * 6) + 1)
+#define DIR_LIST_POSITION (FILE_LIST_POSITION + (FILE_LIST_CHARS * 6) + 1) - 64
 
 
 int sort_function(const void *dest_str_ptr, const void *src_str_ptr)
@@ -91,6 +93,8 @@ const u32 cursor_page_rate = FILE_LIST_ROWS;
 #define SEEK_TICKS_THRESHOLD (500 * 1000)
 #define SEEK_MAX_CHARACTERS  6
 
+uint32_t isloadfile = 0;
+
 s32 load_file(char **wildcards, char *result, u16 *screen_bg)
 {
   DIR *current_dir;
@@ -132,6 +136,8 @@ s32 load_file(char **wildcards, char *result, u16 *screen_bg)
 
   blit_screen(screen_bg);
   set_font_narrow();
+  
+  isloadfile = 1;
 
   while(return_value == 1)
   {
@@ -472,6 +478,9 @@ s32 load_file(char **wildcards, char *result, u16 *screen_bg)
   }
 
   set_font_wide();
+  
+  isloadfile = 0;
+  
   return return_value;
 }
 
@@ -1587,7 +1596,7 @@ void draw_menu(menu_state_struct *menu_state, menu_struct *menu)
 menu_struct *create_menu_options(menu_state_struct *menu_state,
  menu_struct *parent_menu)
 {
-  menu_struct *menu = create_menu(18, parent_menu, draw_menu_options,
+  menu_struct *menu = create_menu((18*2)-1, parent_menu, draw_menu_options,
    focus_menu_options);
   void **menu_options = (void **)menu->options;
   u32 current_menu_option = 0;
@@ -1596,18 +1605,18 @@ menu_struct *create_menu_options(menu_state_struct *menu_state,
   static char *yes_no_labels[] = { " no", "yes" };
   static char *scale_labels[] =
   {
-    "fullscreen", "        1x", "        2x", "        3x", "        4x"
+    "  Standard", "Everything", "       NES", "   No crop"
   };
   static char *cd_card_labels[] = { "  v1", "  v2", "  v3", " acd", "gecd"  };
 
   add_menu_option(create_numeric_labeled(NULL, "Scale screen     ",
-   current_line_number, &(config.scale_factor), 0, 4, scale_labels));
+   current_line_number, &(config.scale_factor), 0, 3, scale_labels));
   add_menu_option(create_numeric_labeled(NULL, "Show fps                ",
    current_line_number, &(config.show_fps), 0, 1, yes_no_labels));
   add_menu_option(create_numeric_labeled(NULL, "Enable sound            ",
    current_line_number, &(config.enable_sound), 0, 1, yes_no_labels));
-  add_menu_option(create_numeric_labeled(NULL, "Fast forward            ",
-   current_line_number, &(config.fast_forward), 0, 1, yes_no_labels));
+  /*add_menu_option(create_numeric_labeled(NULL, "Fast forward            ",
+   current_line_number, &(config.fast_forward), 0, 1, yes_no_labels));*/
 
 #ifdef CONFIG_OPTIONS_CLOCK_SPEED
   add_menu_option(create_numeric(NULL, "Clock speed             ",
@@ -1641,8 +1650,8 @@ menu_struct *create_menu_options(menu_state_struct *menu_state,
    current_line_number, &(config.cd_system_type), 0, 4, cd_card_labels));
   add_menu_option(create_numeric_labeled(NULL, "Per-game BRAM saves     ",
    current_line_number, &(config.per_game_bram), 0, 1, yes_no_labels));
-  add_menu_option(create_numeric_labeled(NULL, "Scale screen width      ",
-   current_line_number, &(config.scale_width), 0, 1, yes_no_labels));
+  /*add_menu_option(create_numeric_labeled(NULL, "Scale screen width      ",
+   current_line_number, &(config.scale_width), 0, 1, yes_no_labels));*/
   add_menu_option(create_numeric_labeled(NULL, "Allow >16 spr per line  ",
    current_line_number, &(config.unlimit_sprites), 0, 1, yes_no_labels));
 
@@ -1737,56 +1746,39 @@ menu_struct *create_menu_netplay(menu_state_struct *menu_state,
 
 menu_struct *create_menu_main(menu_state_struct *menu_state) 
 {
-  menu_struct *menu = create_menu(11, NULL, draw_menu_main, NULL);
+  menu_struct *menu = create_menu(9, NULL, draw_menu_main, NULL);
   menu_struct *options_menu = create_menu_options(menu_state, menu);
   menu_struct *pad_menu = create_menu_pad(menu_state, menu);
   menu_struct *netplay_menu = create_menu_netplay(menu_state, menu);
 
   void **menu_options = (void **)menu->options;
   u32 current_menu_option = 0;
-  u32 current_line_number = 13;
+  u32 current_line_number = 10;
 
-  add_menu_option(create_select_menu(NULL, "Change options",
-   current_line_number, options_menu));
-  add_menu_option(create_select_menu(NULL, "Configure pad ", 
-   current_line_number, pad_menu));
-  add_menu_option(create_select_menu(NULL, "Netplay       ", 
-   current_line_number, netplay_menu));
+  add_menu_option(create_select_menu(NULL, "Change options", current_line_number, options_menu));
+  add_menu_option(create_select_menu(NULL, "Configure pad ", current_line_number, pad_menu));
+  //add_menu_option(create_select_menu(NULL, "Configure pad ", current_line_number, pad_menu));
+  //add_menu_option(create_select_menu(NULL, "Netplay       ", current_line_number, netplay_menu));
+  add_menu_option(create_numeric_select(NULL, "Load state   ", current_line_number, &(config.savestate_number), 0, 9, select_load_state, modify_snapshot_bg, focus_savestate));
+  add_menu_option(create_numeric_select(NULL, "Save state   ", current_line_number, &(config.savestate_number), 0, 9, select_save_state, modify_snapshot_bg, focus_savestate));
+  add_menu_option(create_select(NULL, "Save snapshot ", current_line_number, select_save_snapshot));
 
-  current_line_number++;
+  //add_menu_option(create_select(NULL, "Load new game ", current_line_number, select_load_game));
+  add_menu_option(create_select(NULL, "Restart game  ", current_line_number, select_restart));
 
-  add_menu_option(create_numeric_select(NULL, "Load state   ",
-   current_line_number, &(config.savestate_number), 0, 9, select_load_state,
-   modify_snapshot_bg, focus_savestate));
-  add_menu_option(create_numeric_select(NULL, "Save state   ",
-   current_line_number, &(config.savestate_number), 0, 9, select_save_state,
-   modify_snapshot_bg, focus_savestate));
-  add_menu_option(create_select(NULL, "Save snapshot ", current_line_number, 
-   select_save_snapshot));
+  add_menu_option(create_select(NULL, "Swap CD       ",  current_line_number, select_swap_cd));
+  add_menu_option(create_select(NULL, "Return to game",   current_line_number, select_return));
 
-  current_line_number++;
-
-  add_menu_option(create_select(NULL, "Load new game ",
-   current_line_number, select_load_game));
-  add_menu_option(create_select(NULL, "Restart game  ", 
-   current_line_number, select_restart));
-
-  current_line_number++;
-
-  add_menu_option(create_select(NULL, "Swap CD       ", 
-   current_line_number, select_swap_cd));
-  add_menu_option(create_select(NULL, "Return to game",  
-   current_line_number, select_return));
-
-  current_line_number++;
-
-  add_menu_option( create_select(NULL, "Exit Temper   ",
-   current_line_number, select_quit));
+  add_menu_option( create_select(NULL, "Exit Temper   ", current_line_number, select_quit));
 
   menu->column_start = 104;
 
   return menu;
 }
+
+uint32_t ismenu = 0;
+extern void Set_Menu_resolution();
+extern void Set_InGame_resolution();
 
 void menu(u32 start_file_dialog)
 {
@@ -1815,6 +1807,8 @@ void menu(u32 start_file_dialog)
   menu_state.bg_info_string[0] = 0;
 
   audio_pause_state = audio_pause();
+  
+  Set_Menu_resolution();
 
   if(netplay_can_send)
     send_netplay_pause();
@@ -1824,6 +1818,8 @@ void menu(u32 start_file_dialog)
 
   if(start_file_dialog)
     select_load_game(&menu_state, NULL);
+    
+	ismenu = 1;
 
   while(menu_state.exit_menu == 0)
   {
@@ -1936,5 +1932,8 @@ void menu(u32 start_file_dialog)
 		update_screen();
    }
    #endif
+   
+   ismenu = 0;
+   Set_InGame_resolution();
 }
 

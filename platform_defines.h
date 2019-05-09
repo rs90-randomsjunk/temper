@@ -189,7 +189,7 @@
 
 #endif
 
-#ifdef RS97_BUILD
+#ifdef RS90_BUILD
 
 #define SDL_INIT        (SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)
 
@@ -199,7 +199,6 @@
 #define LINUX_PLATFORM
 #define LETSGO_HOME
 #define KEYBOARD_SUPPORT
-#define CONFIG_OPTIONS_GAMMA
 
 #define OGG_SUPPORT
 #define OGG_TREMOR

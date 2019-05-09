@@ -51,8 +51,8 @@ typedef signed long long int s64;
 
 #define TEMPER_VERSION "1.24.2 GCW"
 #define CD_SWAP_OPTION
-#define FASTFORWARD_FRAMESKIP
-#define FASTFORWARD_FRAMESKIP_RATE 4
+//#define FASTFORWARD_FRAMESKIP
+//#define FASTFORWARD_FRAMESKIP_RATE 4
 
 #ifdef OGG_SUPPORT
 
