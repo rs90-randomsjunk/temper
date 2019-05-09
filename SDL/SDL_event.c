@@ -119,82 +119,95 @@ static uint32_t select_button = 0;
 
 u32 update_input(event_input_struct *event_input)
 {
-  SDL_Event event;
+	SDL_Event event;
 
-  event_input->config_button_action = CONFIG_BUTTON_NONE;
-  event_input->key_action = KEY_ACTION_NONE;
-  event_input->key_letter = 0;
-  event_input->hat_status = HAT_STATUS_NONE;
+	event_input->config_button_action = CONFIG_BUTTON_NONE;
+	event_input->key_action = KEY_ACTION_NONE;
+	event_input->key_letter = 0;
+	event_input->hat_status = HAT_STATUS_NONE;
   
+	if(SDL_PollEvent(&event))
+	{
+		switch(event.type)
+		{
+			case SDL_QUIT:
+				event_input->action_type = INPUT_ACTION_TYPE_PRESS;
+				event_input->key_action = KEY_ACTION_QUIT;
+			break;
+			case SDL_KEYDOWN:
+			switch(event.key.keysym.sym)
+			{
+				case SDLK_LEFT:
+				case SDLK_RIGHT:
+				case SDLK_UP:
+				case SDLK_DOWN:
+				case SDLK_LCTRL:
+				case SDLK_LALT:
+				case SDLK_TAB:
+				case SDLK_BACKSPACE:
+					event_input->action_type = INPUT_ACTION_TYPE_PRESS;
+					event_input->config_button_action = key_map(event.key.keysym.sym);
+					event_input->key_letter = event.key.keysym.unicode;
+				break;
+				case SDLK_ESCAPE:
+					select_button = 1;
+					event_input->action_type = INPUT_ACTION_TYPE_PRESS;
+					event_input->config_button_action = key_map(event.key.keysym.sym);
+					event_input->key_letter = event.key.keysym.unicode;
+				break;
+				case SDLK_RETURN:
+					start_button = 1;
+					event_input->action_type = INPUT_ACTION_TYPE_PRESS;
+					event_input->config_button_action = key_map(event.key.keysym.sym);
+					event_input->key_letter = event.key.keysym.unicode;
+				break;
+			}
+			break;
 
-  
-  if(SDL_PollEvent(&event))
-  {
-    switch(event.type)
-    {
-      case SDL_QUIT:
-        event_input->action_type = INPUT_ACTION_TYPE_PRESS;
-        event_input->key_action = KEY_ACTION_QUIT;
-       break;
-      case SDL_KEYDOWN:
-        event_input->action_type = INPUT_ACTION_TYPE_PRESS;
-		event_input->config_button_action = key_map(event.key.keysym.sym);
-        event_input->key_letter = event.key.keysym.unicode;
-        switch(event.key.keysym.sym)
-        {
-          case SDLK_ESCAPE:
-			select_button = 1;
-            break;
-            
-          case SDLK_RETURN:
-			start_button = 1;
-            break;
-        }
-        break;
-
-      case SDL_KEYUP:
-        event_input->action_type = INPUT_ACTION_TYPE_RELEASE;
-        event_input->config_button_action = key_map(event.key.keysym.sym);
-        switch(event.key.keysym.sym)
-        {
-          case SDLK_ESCAPE:
-			select_button = 0;
-            break;
-            
-          case SDLK_RETURN:
-			start_button = 0;
-            break;
+			case SDL_KEYUP:
+			switch(event.key.keysym.sym)
+			{
+				case SDLK_LEFT:
+				case SDLK_RIGHT:
+				case SDLK_UP:
+				case SDLK_DOWN:
+				case SDLK_LCTRL:
+				case SDLK_LALT:
+				case SDLK_TAB:
+				case SDLK_BACKSPACE:
+					event_input->action_type = INPUT_ACTION_TYPE_RELEASE;
+					event_input->config_button_action = key_map(event.key.keysym.sym);
+					event_input->key_letter = event.key.keysym.unicode;
+				break;
+				case SDLK_ESCAPE:
+					select_button = 0;
+					event_input->action_type = INPUT_ACTION_TYPE_RELEASE;
+					event_input->config_button_action = key_map(event.key.keysym.sym);
+					event_input->key_letter = event.key.keysym.unicode;
+				break;
+				case SDLK_RETURN:
+					start_button = 0;
+					event_input->action_type = INPUT_ACTION_TYPE_RELEASE;
+					event_input->config_button_action = key_map(event.key.keysym.sym);
+					event_input->key_letter = event.key.keysym.unicode;
+				break;
+			}
+			break;
 		}
-        break;
-
-      case SDL_JOYBUTTONDOWN:
-        event_input->action_type = INPUT_ACTION_TYPE_PRESS;
-        event_input->config_button_action = joy_button_map(event.jbutton.button);
-        break;
-
-      case SDL_JOYBUTTONUP:
-        event_input->action_type = INPUT_ACTION_TYPE_RELEASE;
-        event_input->config_button_action = joy_button_map(event.jbutton.button);
-        break;
-
-      case SDL_JOYHATMOTION:
-        event_input->hat_status = joy_hat_map(event.jhat.value);
-        break;
-    }
-  }
-  else
-  {
-    return 0;
-  }
+	}
+	else
+	{
+		return 0;
+	}
   
-  if (start_button && select_button)
-  {
-	event_input->config_button_action = CONFIG_BUTTON_MENU;  
-	select_button = 0;
-	start_button = 0;
-  }
+	if (start_button && select_button)
+	{
+		event_input->config_button_action = CONFIG_BUTTON_MENU;  
+		select_button = 0;
+		start_button = 0;
+	}
 
-  return 1;
+	return 1;
 }
 
 u8 gui_actions[16];
