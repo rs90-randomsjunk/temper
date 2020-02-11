@@ -206,9 +206,16 @@ void update_screen()
                         break;
 					case 2:
 						bitmap_scale_320((uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
-					break;
-					default:
+                        break;
+					case 3:  //auto
 						bitmap_scale_256((uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
+                        break;
+					default:
+                        if(vce.screen_width == 256)
+                                bitmap_scale_256((uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
+                        else
+                                bitmap_scale_320((uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
+
 				}
 		}
 		SDL_UnlockSurface(screen);
