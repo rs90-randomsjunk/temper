@@ -1605,12 +1605,12 @@ menu_struct *create_menu_options(menu_state_struct *menu_state,
   static char *yes_no_labels[] = { " no", "yes" };
   static char *scale_labels[] =
   {
-    "  Standard", "Everything", "       NES", "   No crop"
+    "   256x224", "      Crop", "   320x224"//, "   No crop"
   };
   static char *cd_card_labels[] = { "  v1", "  v2", "  v3", " acd", "gecd"  };
 
   add_menu_option(create_numeric_labeled(NULL, "Scale screen     ",
-   current_line_number, &(config.scale_factor), 0, 3, scale_labels));
+   current_line_number, &(config.scale_factor), 0, 2, scale_labels));
   add_menu_option(create_numeric_labeled(NULL, "Show fps                ",
    current_line_number, &(config.show_fps), 0, 1, yes_no_labels));
   add_menu_option(create_numeric_labeled(NULL, "Enable sound            ",

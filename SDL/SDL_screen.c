@@ -6,6 +6,143 @@ SDL_Surface *real_screen = NULL;
 u32 last_scale_factor;
 u8 *real_screen_pixels;
 
+#define RSHIFT32(X) (((X) & 0xF7DEF7DE) >>1)
+//downscaling for ra-90
+static void bitmap_scale_crop(uint32_t* restrict src, uint32_t* restrict dst)
+{
+    uint16_t y=4;
+    uint32_t* __restrict__ buffer_mem;
+ 
+    const uint16_t ix=1, iy=7;
+    
+    for(int H = 0; H < 160 / 5; H++)
+    {
+	    buffer_mem = &src[y*128*2];
+        uint16_t x = 4;
+        for(int W = 0; W < 120; W++) 
+        {
+            uint32_t a,b,c,d,e,f,g;
+            a = RSHIFT32(buffer_mem[x]);
+            b = RSHIFT32(buffer_mem[x+256]);
+            c = RSHIFT32(buffer_mem[x+256*2]);
+            d = RSHIFT32(buffer_mem[x+256*3]);
+            e = RSHIFT32(buffer_mem[x+256*4]);
+            f = RSHIFT32(buffer_mem[x+256*5]);
+            g = RSHIFT32(buffer_mem[x+256*6]);          
+
+            *dst =  a +  RSHIFT32(a + b);
+	        *(dst+120) = b + c;
+	        *(dst+120*2) = d + RSHIFT32(d + RSHIFT32(c + e));
+	        *(dst+120*3) = e + f;
+	        *(dst+120*4) = g + RSHIFT32(f + g);
+            dst++;
+            x += ix;
+        }
+        dst += 120*4;
+        y += iy;
+    }
+}
+
+#define RSHIFT(X) (((X) & 0xF7DE) >>1)
+//downscaling for ra-90
+static void bitmap_scale_256(uint16_t* restrict src, uint16_t* restrict dst)
+{
+    uint16_t y=8;  //crop top 8 pixels
+    uint16_t* __restrict__ buffer_mem;
+ 
+    const uint16_t ix=1, iy=7;
+    
+    for(int H = 0; H < 160 / 5; H++)
+    {
+	    buffer_mem = &src[y*256*2];
+        uint16_t x = 0;
+        int count=0;
+        for(int W = 0; W < 240; W++) 
+        {
+            uint32_t a,b,c,d,e,f,g;
+            a = RSHIFT(buffer_mem[x]);
+            b = RSHIFT(buffer_mem[x+512]);
+            c = RSHIFT(buffer_mem[x+512*2]);
+            d = RSHIFT(buffer_mem[x+512*3]);
+            e = RSHIFT(buffer_mem[x+512*4]);
+            f = RSHIFT(buffer_mem[x+512*5]);
+            g = RSHIFT(buffer_mem[x+512*6]);          
+
+            if(count==15){
+                count=0;
+                a = RSHIFT(a + RSHIFT(buffer_mem[x+1]));
+                b = RSHIFT(b + RSHIFT(buffer_mem[x+512+1]));
+                c = RSHIFT(c + RSHIFT(buffer_mem[x+512*2+1]));
+                d = RSHIFT(d + RSHIFT(buffer_mem[x+512*3+1]));
+                e = RSHIFT(e + RSHIFT(buffer_mem[x+512*4+1]));
+                f = RSHIFT(f + RSHIFT(buffer_mem[x+512*5+1]));
+                g = RSHIFT(g + RSHIFT(buffer_mem[x+512*6+1]));
+                x += 1;
+
+            }
+            
+            *dst =  a +  RSHIFT(a + b);
+	        *(dst+240) = b + c;
+	        *(dst+240*2) = d + RSHIFT(d + RSHIFT(c + e));
+	        *(dst+240*3) = e + f;
+	        *(dst+240*4) = g + RSHIFT(f + g);
+            dst++;
+            x += ix;
+            count++;
+        }
+        dst += 240*4;
+        y += iy;
+    }
+}
+
+void bitmap_scale_320(uint16_t* __restrict__ src, uint16_t* __restrict__ dst)
+{
+    uint16_t y=8;  //crop top 8 pixels
+    uint16_t* __restrict__ buffer_mem;
+    
+    const uint16_t ix=1, iy=7;
+    
+    //Holizonal Scaling 
+    for(int H = y; H < 224+y; H++){
+        uint16_t* s1 = src+512*H;
+        uint16_t* s2 = src+512*H;
+        for(int W = 0; W <240/3; W++){
+            *(s1++) = RSHIFT(*s2) + RSHIFT(RSHIFT(*s2) + RSHIFT(*(s2+1)));
+            *(s1++) = RSHIFT(*(s2+1)) + RSHIFT(*(s2+2));
+            *(s1++) = RSHIFT(*(s2+2)) + RSHIFT(RSHIFT(*(s2+2)) + RSHIFT(*(s2+3)));
+            s2+=4;
+        }
+    }
+    
+    //Vertical Scaling 
+    for(int H = 0; H < 160 / 5; H++)
+    {
+	    buffer_mem = &src[y*512];
+        uint16_t x = 0;
+        for(int W = 0; W < 240; W++) 
+        {
+            uint16_t a,b,c,d,e,f,g;
+            a = RSHIFT(buffer_mem[x]);
+            b = RSHIFT(buffer_mem[x+512]);
+            c = RSHIFT(buffer_mem[x+512*2]);
+            d = RSHIFT(buffer_mem[x+512*3]);
+            e = RSHIFT(buffer_mem[x+512*4]);
+            f = RSHIFT(buffer_mem[x+512*5]);
+            g = RSHIFT(buffer_mem[x+512*6]);          
+
+            *dst =  a +  RSHIFT(a + b);
+	        *(dst+240) = b + c;
+	        *(dst+240*2) = d + RSHIFT(d + RSHIFT(c + e));
+	        *(dst+240*3) = e + f;
+	        *(dst+240*4) = g + RSHIFT(f + g);
+            dst++;
+            x += ix;
+        }
+        dst += 240*4;
+        y += iy;
+    }
+}
+
 /* alekmaul's scaler taken from mame4all */
 static void bitmap_scale(uint32_t startx, uint32_t starty, uint32_t viswidth, uint32_t visheight, uint32_t newwidth, uint32_t newheight,uint32_t pitchsrc,uint32_t pitchdest, uint16_t* restrict src, uint16_t* restrict dst)
 {
@@ -64,18 +201,14 @@ void update_screen()
 		{
 				switch (config.scale_factor)
 				{
-					default:
-						bitmap_scale(8, 0, vce.screen_width-8, 224-12, real_screen->w, real_screen->h, screen->w, 0, (uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
-					break;
 					case 1:
-						bitmap_scale(0, 0, vce.screen_width, 240, real_screen->w, real_screen->h, screen->w, 0, (uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
-					break;
+                        bitmap_scale_crop((uint32_t* restrict)screen->pixels, (uint32_t* restrict)real_screen->pixels);
+                        break;
 					case 2:
-						bitmap_scale(0, 20, vce.screen_width, 224-12, real_screen->w, real_screen->h, screen->w, 0, (uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
+						bitmap_scale_320((uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
 					break;
-					case 3:
-						bitmap_scale(8, 48, 240, 160, real_screen->w, real_screen->h, screen->w, 0, (uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
-					break;
+					default:
+						bitmap_scale_256((uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
 				}
 		}
 		SDL_UnlockSurface(screen);
@@ -94,11 +227,7 @@ void set_screen_resolution(u32 width, u32 height)
 		SDL_FreeSurface(screen);
     }
     
-	real_screen = SDL_SetVideoMode(240, 160, 16, SDL_HWSURFACE
-	#ifdef SDL_TRIPLEBUF
-	
-	#endif
-	);
+	real_screen = SDL_SetVideoMode(240, 160, 16, SDL_HWSURFACE);
 	screen = SDL_CreateRGBSurface(SDL_SWSURFACE, 512, 240, 16, 0,0,0,0);
   
 	if(old_pixels != NULL)
