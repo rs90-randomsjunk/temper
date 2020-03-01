@@ -21,6 +21,7 @@ static void bitmap_scale_crop(uint32_t* restrict src, uint32_t* restrict dst)
         uint16_t x = 4;
         for(int W = 0; W < 120; W++) 
         {
+            // Vertical Scaling( 7px to 5px)
             uint32_t a,b,c,d,e,f,g;
             a = RSHIFT32(buffer_mem[x]);
             b = RSHIFT32(buffer_mem[x+256]);
@@ -45,7 +46,7 @@ static void bitmap_scale_crop(uint32_t* restrict src, uint32_t* restrict dst)
 
 #define RSHIFT(X) (((X) & 0xF7DE) >>1)
 //downscaling for ra-90
-static void bitmap_scale_256(uint16_t* restrict src, uint16_t* restrict dst)
+static void bitmap_scale_256to240(uint16_t* restrict src, uint16_t* restrict dst)
 {
     uint16_t y=8;  //crop top 8 pixels
     uint16_t* __restrict__ buffer_mem;
@@ -56,9 +57,9 @@ static void bitmap_scale_256(uint16_t* restrict src, uint16_t* restrict dst)
     {
 	    buffer_mem = &src[y*256*2];
         uint16_t x = 0;
-        int count=0;
         for(int W = 0; W < 240; W++) 
         {
+            //Vertical Scaling (7px to 5px)
             uint32_t a,b,c,d,e,f,g;
             a = RSHIFT(buffer_mem[x]);
             b = RSHIFT(buffer_mem[x+512]);
@@ -68,8 +69,7 @@ static void bitmap_scale_256(uint16_t* restrict src, uint16_t* restrict dst)
             f = RSHIFT(buffer_mem[x+512*5]);
             g = RSHIFT(buffer_mem[x+512*6]);          
 
-            if(count==15){
-                count=0;
+            if(W % 15 == 0){
                 a = RSHIFT(a + RSHIFT(buffer_mem[x+1]));
                 b = RSHIFT(b + RSHIFT(buffer_mem[x+512+1]));
                 c = RSHIFT(c + RSHIFT(buffer_mem[x+512*2+1]));
@@ -78,7 +78,6 @@ static void bitmap_scale_256(uint16_t* restrict src, uint16_t* restrict dst)
                 f = RSHIFT(f + RSHIFT(buffer_mem[x+512*5+1]));
                 g = RSHIFT(g + RSHIFT(buffer_mem[x+512*6+1]));
                 x += 1;
-
             }
             
             *dst =  a +  RSHIFT(a + b);
@@ -88,14 +87,13 @@ static void bitmap_scale_256(uint16_t* restrict src, uint16_t* restrict dst)
 	        *(dst+240*4) = g + RSHIFT(f + g);
             dst++;
             x += ix;
-            count++;
         }
         dst += 240*4;
         y += iy;
     }
 }
 
-void bitmap_scale_320(uint16_t* __restrict__ src, uint16_t* __restrict__ dst)
+void bitmap_scale_320to240(uint16_t* __restrict__ src, uint16_t* __restrict__ dst)
 {
     uint16_t y=8;  //crop top 8 pixels
     uint16_t* __restrict__ buffer_mem;
@@ -103,18 +101,37 @@ void bitmap_scale_320(uint16_t* __restrict__ src, uint16_t* __restrict__ dst)
     const uint16_t ix=1, iy=7;
     
     //Holizonal Scaling 
+#define RMASK 0b1111100000000000
+#define GMASK 0b0000011111100000
+#define BMASK 0b0000000000011111
+
     for(int H = y; H < 224+y; H++){
         uint16_t* s1 = src+512*H;
         uint16_t* s2 = src+512*H;
         for(int W = 0; W <240/3; W++){
-            *(s1++) = RSHIFT(*s2) + RSHIFT(RSHIFT(*s2) + RSHIFT(*(s2+1)));
-            *(s1++) = RSHIFT(*(s2+1)) + RSHIFT(*(s2+2));
-            *(s1++) = RSHIFT(*(s2+2)) + RSHIFT(RSHIFT(*(s2+2)) + RSHIFT(*(s2+3)));
+            int r[4],g[4],b[4],R0,G0,B0,R1,G1,B1,R2,G2,B2;
+            for(int i = 0; i<4; i++){
+                r[i] = *(s2+i) & RMASK;
+                g[i] = *(s2+i) & GMASK;
+                b[i] = *(s2+i) & BMASK;
+            }
+            R0 = r[0];
+            G0 = g[0];
+            B0 = ((b[0] + b[1])>>1) & BMASK;
+            R1 = r[1];
+            G1 = ((g[1] + g[2])>>1) & GMASK;
+            B1 = b[2];
+            R2 = ((r[2]>>1) + (r[3]>>1)) & RMASK;
+            G2 = g[3];
+            B2 = b[3];
+            *(s1++) = R0 | G0 | B0;
+            *(s1++) = R1 | G1 | B1;
+            *(s1++) = R2 | G2 | B2;            
             s2+=4;
         }
     }
     
-    //Vertical Scaling 
+    //Vertical Scaling  (7px to 5px)
     for(int H = 0; H < 160 / 5; H++)
     {
 	    buffer_mem = &src[y*512];
@@ -201,20 +218,20 @@ void update_screen()
 		{
 				switch (config.scale_factor)
 				{
-					case 1:
+					case 1: //Crop
                         bitmap_scale_crop((uint32_t* restrict)screen->pixels, (uint32_t* restrict)real_screen->pixels);
                         break;
 					case 2:
-						bitmap_scale_320((uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
+						bitmap_scale_320to240((uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
                         break;
-					case 3:  //auto
-						bitmap_scale_256((uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
+					case 3:
+						bitmap_scale_256to240((uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
                         break;
-					default:
+					default: // auto
                         if(vce.screen_width == 256)
-                                bitmap_scale_256((uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
+                                bitmap_scale_256to240((uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
                         else
-                                bitmap_scale_320((uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
+                                bitmap_scale_320to240((uint16_t* restrict)screen->pixels, (uint16_t* restrict)real_screen->pixels);
 
 				}
 		}
