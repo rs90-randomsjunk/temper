@@ -1605,7 +1605,7 @@ menu_struct *create_menu_options(menu_state_struct *menu_state,
   static char *yes_no_labels[] = { " no", "yes" };
   static char *scale_labels[] =
   {
-    "  Standard", "Everything", "       NES", "   No crop"
+   "      Auto", "      Crop", "   320x224",  "   256x224"
   };
   static char *cd_card_labels[] = { "  v1", "  v2", "  v3", " acd", "gecd"  };
 
@@ -1932,7 +1932,8 @@ void menu(u32 start_file_dialog)
 		update_screen();
    }
    #endif
-   
+   reset_io_buttons();
+    
    ismenu = 0;
    Set_InGame_resolution();
 }

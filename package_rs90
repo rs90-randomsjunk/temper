@@ -2,8 +2,7 @@
 
 mkdir -p opk
 cp ./temper opk/temper
-cp ./icon.png opk/icon.png
-cp ./COPYING opk/COPYING
+cp ./SDL/icon.png opk/icon.png
 
 # https://unix.stackexchange.com/questions/219268/how-to-add-new-lines-when-using-echo
 print()

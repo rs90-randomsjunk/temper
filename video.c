@@ -3206,7 +3206,7 @@ void update_frame(u32 skip)
 
     //sprintf(print_buffer, "%02d/60", fps);
     sprintf(print_buffer, "%02d", fps);
-    print_string(print_buffer, 0xFFFF, 0x000, 0, 0,
+    print_string(print_buffer, 0xFFFF, 0x000, 10, 10,
      vce.screen_width);
   }
 

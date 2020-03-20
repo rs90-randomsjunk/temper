@@ -40,7 +40,7 @@ config_struct config =
   0,                 // u32 show_fps;
   1,                 // u32 enable_sound;
   0,                 // u32 fast_forward;
-  22050,             // u32 audio_output_frequency;
+  44100/*22050*/,             // u32 audio_output_frequency;
   1,                 // u32 patch_idle_loops;
   SS_SNAPSHOT_OFF,   // u32 snapshot_format;
   0,                 // u32 force_usa;
