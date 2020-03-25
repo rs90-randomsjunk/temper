@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
   
 	if (strstr(argv[1], ".bin") || strstr(argv[1], ".iso") )
 	{
-		return;
+		return -1;
 	}
 
     if(load_rom(argv[argc - 1]) == -1)
